@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -8,8 +9,11 @@ public class GameTile : MonoBehaviour, IPointerEnterHandler,
     [SerializeField] SpriteRenderer hoverRenderer;
     [SerializeField] SpriteRenderer turretRenderer;
     [SerializeField] SpriteRenderer spawnRenderer;
+    private LineRenderer lineRenderer;
     private SpriteRenderer spriteRenderer;
     private Color originalColor;
+    private bool canAttack = true;
+
     public GameManager GM { get; internal set; }
     public int X { get; internal set; }
     public int Y { get; internal set; }
@@ -17,9 +21,45 @@ public class GameTile : MonoBehaviour, IPointerEnterHandler,
 
     private void Awake()
     {
+        lineRenderer = GetComponent<LineRenderer>();
+        lineRenderer.enabled = false;
+        lineRenderer.SetPosition(0, transform.position);
         spriteRenderer = GetComponent<SpriteRenderer>();
         turretRenderer.enabled = false;
         originalColor = spriteRenderer.color;
+    }
+
+    private void Update()
+    {
+        if (turretRenderer.enabled && canAttack)
+        {
+            Enemy target = null;
+            foreach (var enemy in Enemy.allEnemies)
+            {
+                if (Vector3.Distance(transform.position, enemy.transform.position) < 2)
+                {
+                    target = enemy;
+                    break;
+                }
+            }
+
+            if (target != null)
+            {
+                StartCoroutine(AttackCoroutine(target));
+            }
+        }
+    }
+
+    IEnumerator AttackCoroutine(Enemy target)
+    {
+        target.GetComponent<Enemy>().Attack();
+        canAttack = false;
+        lineRenderer.SetPosition(1, target.transform.position);
+        lineRenderer.enabled = true;
+        yield return new WaitForSeconds(0.2f);
+        lineRenderer.enabled = false;
+        yield return new WaitForSeconds(1.0f);
+        canAttack = true;
     }
 
     internal void TurnGrey()

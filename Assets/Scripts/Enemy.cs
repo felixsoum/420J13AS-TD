@@ -3,7 +3,15 @@ using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
+    [SerializeField] GameObject visual;
+    public static HashSet<Enemy> allEnemies = new HashSet<Enemy>();
     private Stack<GameTile> path = new Stack<GameTile>();
+    int hp = 20;
+
+    private void Awake()
+    {
+        allEnemies.Add(this);
+    }
 
     internal void SetPath(List<GameTile> pathToGoal)
     {
@@ -28,7 +36,25 @@ public class Enemy : MonoBehaviour
         }
         else
         {
-            Destroy(gameObject);
+            Die();
+        }
+    }
+
+    private void Die()
+    {
+        allEnemies.Remove(this);
+        Destroy(gameObject);
+    }
+
+    internal void Attack()
+    {
+        if (--hp <= 0)
+        {
+            Die();
+        }
+        else
+        {
+            visual.transform.localScale *= 0.9f;
         }
     }
 }
